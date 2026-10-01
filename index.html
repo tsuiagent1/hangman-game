@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Hangman Challenge 猜單字挑戰賽 - 崔董特仕版</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <style>
+    :root {
+      --bg-primary: #0a0f1d;
+      --bg-secondary: #131b2e;
+      --bg-card: #1c2742;
+      --accent-cyan: #06b6d4;
+      --accent-cyan-glow: rgba(6, 182, 212, 0.4);
+      --accent-neon: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border-subtle: #2d3b5b;
+      --key-bg: #222f4c;
+      --key-hover: #33446b;
+      --key-correct: #059669;
+      --key-wrong: #334155;
+      --card-radius: 16px;
+      --shadow-elevation: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 20px;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 4px 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      font-size: 28px;
+      filter: drop-shadow(0 0 8px var(--accent-cyan-glow));
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-card);
+      border-color: var(--accent-cyan);
+      transform: translateY(-1px);
+    }
+
+    /* Main Container */
+    main {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+      justify-content: center;
+      padding: 6px 0;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat-pill {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .stat-value.danger {
+      color: var(--accent-red);
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    }
+
+    .stat-value.highlight {
+      color: var(--accent-cyan);
+      text-shadow: 0 0 10px var(--accent-cyan-glow);
+    }
+
+    /* Category Selector */
+    .category-pills {
+      width: 100%;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 2px;
+      scrollbar-width: none;
+    }
+    .category-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .cat-btn.active {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4);
+    }
+
+    /* Visual Arena: Gallows & Info */
+    .game-arena {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow-elevation);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* SVG Gallows */
+    .gallows-box {
+      width: 200px;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    svg.gallows-svg {
+      width: 100%;
+      height: 100%;
+      stroke: var(--text-muted);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .gallows-line {
+      stroke: #475569;
+      stroke-width: 5;
+    }
+
+    .rope-line {
+      stroke: #f59e0b;
+      stroke-width: 3.5;
+      stroke-dasharray: 4, 3;
+    }
+
+    .man-part {
+      stroke: #38bdf8;
+      stroke-width: 4.5;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .man-part.visible {
+      opacity: 1;
+    }
+
+    .man-part.head {
+      fill: #1e293b;
+    }
+
+    .man-part.dead {
+      stroke: var(--accent-red) !important;
+      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.7));
+    }
+
+    /* Clue Banner */
+    .clue-banner {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px dashed var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .clue-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .hint-trigger-btn {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--accent-amber);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .hint-trigger-btn:hover {
+      background: rgba(245, 158, 11, 0.3);
+    }
+
+    .hint-revealed-text {
+      color: #fde68a;
+      font-size: 0.82rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Word Letters Display */
+    .word-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding: 6px 0;
+      min-height: 52px;
+    }
+
+    .letter-slot {
+      width: 38px;
+      height: 48px;
+      background: var(--bg-primary);
+      border-bottom: 3px solid var(--accent-cyan);
+      border-radius: 8px 8px 2px 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--text-main);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .letter-slot.revealed {
+      color: #38bdf8;
+      border-bottom-color: var(--accent-neon);
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .letter-slot.missed {
+      color: var(--accent-red);
+      border-bottom-color: var(--accent-red);
+      opacity: 0.85;
+    }
+
+    /* Virtual Keyboard */
+    .keyboard-box {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .kb-key {
+      background: var(--key-bg);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      flex: 1;
+      max-width: 44px;
+      height: 46px;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+      transition: all 0.12s ease;
+    }
+
+    .kb-key:hover:not(:disabled) {
+      background: var(--key-hover);
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .kb-key:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .kb-key.correct {
+      background: var(--key-correct);
+      border-color: #10b981;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+      opacity: 0.9;
+      cursor: default;
+    }
+
+    .kb-key.wrong {
+      background: var(--key-wrong);
+      border-color: transparent;
+      color: var(--text-dim);
+      box-shadow: none;
+      opacity: 0.4;
+      cursor: default;
+      transform: scale(0.96);
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 15, 29, 0.85);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--card-radius);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 20px var(--accent-cyan-glow);
+      width: 100%;
+      max-width: 440px;
+      padding: 28px 24px;
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-icon {
+      font-size: 54px;
+      margin-bottom: 12px;
+      display: inline-block;
+      animation: bounce 0.6s ease;
+    }
+
+    .modal-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .modal-word {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--accent-cyan);
+      margin: 12px 0 6px;
+      padding: 8px 16px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      display: inline-block;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .modal-meaning {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      padding: 0 8px;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+      border: none;
+      color: #ffffff;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+      transition: all 0.2s;
+    }
+
+    .primary-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* Footer */
+    footer {
+      width: 100%;
+      max-width: 680px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      padding-top: 10px;
+    }
+
+    /* Keyframe Animations */
+    @keyframes popIn {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 8px 10px 14px; }
+      .brand-title { font-size: 1rem; }
+      .gallows-box { height: 145px; }
+      .letter-slot { width: 32px; height: 42px; font-size: 1.25rem; }
+      .kb-key { height: 42px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Confetti Particle Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-wrap">
+      <span class="logo-icon">🎮</span>
+      <div>
+        <div class="brand-title">HANGMAN CHALLENGE</div>
+        <div class="brand-subtitle">崔董特仕版 • 旗艦電競與財務詞庫</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="sound-btn" title="切換音效">🔊</button>
+      <button class="icon-btn" id="stats-btn" title="歷史戰績">📊</button>
+      <button class="icon-btn" id="new-game-btn" title="重新開局">🔄</button>
+    </div>
+  </header>
+
+  <!-- Main Interaction Area -->
+  <main>
+    <!-- Status Dashboard -->
+    <div class="status-bar">
+      <div class="stat-pill">
+        <span class="stat-label">目前連勝</span>
+        <span class="stat-value highlight" id="streak-val">0</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">剩餘失誤</span>
+        <span class="stat-value" id="mistakes-left">6 / 6</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">得分點數</span>
+        <span class="stat-value" id="score-val">0</span>
+      </div>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="category-pills">
+      <button class="cat-btn active" data-cat="all">🔥 全部領域</button>
+      <button class="cat-btn" data-cat="esports">⚡ 電競硬體 (ZOWIE)</button>
+      <button class="cat-btn" data-cat="finance">📈 投資與財務</button>
+      <button class="cat-btn" data-cat="tech">🤖 AI 與軟體科技</button>
+    </div>
+
+    <!-- Visual Arena -->
+    <div class="game-arena">
+      <!-- SVG Hangman Gallows -->
+      <div class="gallows-box">
+        <svg class="gallows-svg" viewBox="0 0 200 180">
+          <!-- Gallows Base & Structure -->
+          <line class="gallows-line" x1="20" y1="165" x2="180" y2="165" />
+          <line class="gallows-line" x1="55" y1="165" x2="55" y2="20" />
+          <line class="gallows-line" x1="55" y1="20" x2="135" y2="20" />
+          <line class="gallows-line" x1="55" y1="50" x2="85" y2="20" />
+          <line class="rope-line" x1="135" y1="20" x2="135" y2="45" />
+
+          <!-- Stickman Body Parts (Revealed step-by-step) -->
+          <!-- 1: Head -->
+          <circle class="man-part head" id="part-head" cx="135" cy="60" r="14" />
+          <!-- 2: Torso -->
+          <line class="man-part" id="part-body" x1="135" y1="74" x2="135" y2="115" />
+          <!-- 3: Left Arm -->
+          <line class="man-part" id="part-arm-l" x1="135" y1="85" x2="112" y2="102" />
+          <!-- 4: Right Arm -->
+          <line class="man-part" id="part-arm-r" x1="135" y1="85" x2="158" y2="102" />
+          <!-- 5: Left Leg -->
+          <line class="man-part" id="part-leg-l" x1="135" y1="115" x2="115" y2="150" />
+          <!-- 6: Right Leg -->
+          <line class="man-part" id="part-leg-r" x1="135" y1="115" x2="155" y2="150" />
+        </svg>
+      </div>
+
+      <!-- Clue & Hint -->
+      <div class="clue-banner">
+        <div class="clue-meta">
+          <span id="clue-cat-icon">🏷️</span>
+          <span id="clue-cat-name">主題：電競與硬體</span>
+          <span style="color:var(--text-dim);">•</span>
+          <span id="clue-len">字數：5</span>
+        </div>
+        <div id="hint-wrapper">
+          <button class="hint-trigger-btn" id="btn-show-hint">💡 提示 (-20分)</button>
+        </div>
+      </div>
+
+      <!-- Word Display Underlines -->
+      <div class="word-display" id="word-display">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- On-screen QWERTY Keyboard -->
+    <div class="keyboard-box" id="virtual-keyboard">
+      <!-- Generated by JS -->
+    </div>
+  </main>
+
+  <!-- Result & Stat Modals -->
+  <div class="modal-overlay" id="result-modal">
+    <div class="modal-card">
+      <div class="modal-icon" id="modal-icon">🏆</div>
+      <h2 class="modal-title" id="modal-title">挑戰成功！</h2>
+      <div class="modal-word" id="modal-word">ZOWIE</div>
+      <p class="modal-meaning" id="modal-meaning">頂級專業電競品牌，以極致人體工學與電競螢幕聞名。</p>
+      <button class="primary-btn" id="modal-next-btn">下一題單字 ➔</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="stats-modal">
+    <div class="modal-card">
+      <div class="modal-icon">📊</div>
+      <h2 class="modal-title">崔董專屬戰績統計</h2>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:20px 0;">
+        <div class="stat-pill">
+          <span class="stat-label">總局數</span>
+          <span class="stat-value" id="stat-total-games">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">勝率</span>
+          <span class="stat-value highlight" id="stat-win-rate">0%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">最高連勝</span>
+          <span class="stat-value" id="stat-max-streak">0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">累積總得分</span>
+          <span class="stat-value highlight" id="stat-total-score">0</span>
+        </div>
+      </div>
+      <button class="primary-btn" id="modal-stats-close-btn">返回遊戲</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Hangman Game v2.0 • 秘書處專屬打造 • 支援筆電實體鍵盤 (A-Z) 與手機觸控
+  </footer>
+
+  <script>
+    // --- Vocabulary Database ---
+    const VOCABULARY = [
+      // Esports & Hardware
+      { word: "ZOWIE", category: "esports", catName: "電競硬體", icon: "⚡", hint: "BenQ 旗下世界頂級電競外設品牌，人體工學與賽事螢幕代表" },
+      { word: "DYAC", category: "esports", catName: "電競硬體", icon: "⚡", hint: "ZOWIE 獨家動態精準技術，能大幅減少壓槍與畫面動態模糊" },
+      { word: "SENSOR", category: "esports", catName: "電競硬體", icon: "⚡", hint: "電競滑鼠核心光學感測元件（如次世代 PAW3950）" },
+      { word: "OPTICAL", category: "esports", catName: "電競硬體", icon: "⚡", hint: "以光束觸發之微動開關，具備零延遲與杜絕連點特性" },
+      { word: "REFRESH", category: "esports", catName: "電競硬體", icon: "⚡", hint: "螢幕每秒刷新畫面幀數（如 240Hz, 360Hz, 540Hz）" },
+      { word: "WIRELESS", category: "esports", catName: "電競硬體", icon: "⚡", hint: "極致低延遲、無拘無束之 2.4GHz 專業電競無線連線架構" },
+      { word: "ERGONOMIC", category: "esports", catName: "電競硬體", icon: "⚡", hint: "人體工學設計，為不同握姿選手提供最佳肌肉支撐" },
+      { word: "POLLING", category: "esports", catName: "電競硬體", icon: "⚡", hint: "滑鼠回報率（Polling Rate），代表每秒向電腦發送數據次數" },
+      { word: "LATENCY", category: "esports", catName: "電競硬體", icon: "⚡", hint: "極低端到端點對點輸入延遲，決定射擊競技生死瞬間" },
+      { word: "SWITCH", category: "esports", catName: "電競硬體", icon: "⚡", hint: "滑鼠與鍵盤之核心按鍵微動開關" },
+      { word: "RECEPTOR", category: "esports", catName: "電競硬體", icon: "⚡", hint: "增強型獨立無線訊號基座，提供極致抗干擾傳輸" },
+      { word: "MOUSEPAD", category: "esports", catName: "電競硬體", icon: "⚡", hint: "專業電競滑鼠墊，調校啟動摩擦與精準滑動制動力" },
+
+      // Investment & Finance
+      { word: "PORTFOLIO", category: "finance", catName: "投資財務", icon: "📈", hint: "個人或機構在市之多樣化投資資產組合與持股配置" },
+      { word: "DIVIDEND", category: "finance", catName: "投資財務", icon: "📈", hint: "上市企業將盈餘回饋分配予投資股東之現金或股票股利" },
+      { word: "REBALANCE", category: "finance", catName: "投資財務", icon: "📈", hint: "定期調整持股比重，修復風險敞口之投組再平衡作業" },
+      { word: "LIQUIDITY", category: "finance", catName: "投資財務", icon: "📈", hint: "金融市場之流動性，指資產在不影響價格下變現之難易度" },
+      { word: "VOLATILITY", category: "finance", catName: "投資財務", icon: "📈", hint: "標的市場價格波動劇烈程度，亦為風險衡量核心指標" },
+      { word: "BENCHMARK", category: "finance", catName: "投資財務", icon: "📈", hint: "績效衡量基準（如台股大盤指數或元大台灣50 ETF）" },
+      { word: "POSITION", category: "finance", catName: "投資財務", icon: "📈", hint: "投資人在市場建立並持續持有之股票或衍生部位" },
+      { word: "STOPLOSS", category: "finance", catName: "投資財務", icon: "📈", hint: "嚴格紀律執行之防守停損線（如崔董堅持之 -10% 風控紀律）" },
+      { word: "CAPITAL", category: "finance", catName: "投資財務", icon: "📈", hint: "投入於各項投資與營運生產活動之核心本金" },
+      { word: "BULLISH", category: "finance", catName: "投資財務", icon: "📈", hint: "多頭行情，對後續價格走勢抱持樂觀上漲預期" },
+      { word: "BEARISH", category: "finance", catName: "投資財務", icon: "📈", hint: "空頭市場，預期標的價格未來面臨回檔下跌修正" },
+
+      // AI & Tech
+      { word: "FASTAPI", category: "tech", catName: "AI 科技", icon: "🤖", hint: "現代化高並發、高效能之非同步 Python Web 框架" },
+      { word: "GITHUB", category: "tech", catName: "AI 科技", icon: "🤖", hint: "全球頂級之代碼託管、版本控制與 CI/CD 開源協同平台" },
+      { word: "SANDBOX", category: "tech", catName: "AI 科技", icon: "🤖", hint: "隔離安全之雲端沙盒容器，提供無風險的代碼執行測試環境" },
+      { word: "PIPELINE", category: "tech", catName: "AI 科技", icon: "🤖", hint: "自動化交付流水線，串接測試、構建與原子化部署" },
+      { word: "CONTAINER", category: "tech", catName: "AI 科技", icon: "🤖", hint: "輕量化虛擬隔離單元，將代碼與依賴統一打包隨處運行" },
+      { word: "AUTOMATION", category: "tech", catName: "AI 科技", icon: "🤖", hint: "自動化工作流，解放繁瑣重複人工作業之智能體核心能力" },
+      { word: "BACKEND", category: "tech", catName: "AI 科技", icon: "🤖", hint: "伺服器後台架構，負責資料庫運算、權限管理與 API 調度" },
+      { word: "ALGORITHM", category: "tech", catName: "AI 科技", icon: "🤖", hint: "為解決特定運算或優化問題所制定之嚴謹邏輯步驟" },
+      { word: "WEBHOOK", category: "tech", catName: "AI 科技", icon: "🤖", hint: "事件驅動之 HTTP 回呼通知機制（如 Telegram 訊息即時推送）" },
+      { word: "RUNTIME", category: "tech", catName: "AI 科技", icon: "🤖", hint: "程式運行期之執行環境與系統底層依賴庫" }
+    ];
+
+    // --- Audio Synthesis via Web Audio API ---
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      }
+      playTone(freq, type, duration, delay = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        setTimeout(() => {
+          try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+          } catch(e) {}
+        }, delay);
+      }
+      correct() {
+        this.playTone(523.25, 'sine', 0.1, 0); // C5
+        this.playTone(659.25, 'sine', 0.18, 90); // E5
+      }
+      wrong() {
+        this.playTone(220, 'sawtooth', 0.18, 0); // A3
+        this.playTone(164.81, 'sawtooth', 0.22, 100); // E3
+      }
+      win() {
+        this.playTone(523.25, 'triangle', 0.15, 0);
+        this.playTone(659.25, 'triangle', 0.15, 120);
+        this.playTone(783.99, 'triangle', 0.15, 240);
+        this.playTone(1046.50, 'triangle', 0.35, 360);
+      }
+      lose() {
+        this.playTone(392.00, 'sawtooth', 0.2, 0);
+        this.playTone(329.63, 'sawtooth', 0.2, 160);
+        this.playTone(261.63, 'sawtooth', 0.45, 320);
+      }
+    }
+
+    // --- Confetti Cannon ---
+    class Confetti {
+      constructor() {
+        this.canvas = document.getElementById('confetti-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+        this.animating = false;
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+      }
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+      burst() {
+        this.particles = [];
+        const colors = ['#06b6d4', '#38bdf8', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+        for (let i = 0; i < 90; i++) {
+          this.particles.push({
+            x: this.canvas.width / 2,
+            y: this.canvas.height / 2 + 40,
+            r: Math.random() * 6 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vx: (Math.random() - 0.5) * 16,
+            vy: (Math.random() - 0.7) * 18,
+            gravity: 0.38,
+            tilt: Math.random() * 10,
+            tiltAngleInc: Math.random() * 0.08 + 0.04,
+            opacity: 1
+          });
+        }
+        if (!this.animating) {
+          this.animating = true;
+          this.animate();
+        }
+      }
+      animate() {
+        if (!this.animating) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        let activeCount = 0;
+        for (let p of this.particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.tilt += p.tiltAngleInc;
+          p.opacity -= 0.009;
+          if (p.opacity > 0 && p.y < this.canvas.height + 20) {
+            activeCount++;
+            this.ctx.beginPath();
+            this.ctx.lineWidth = p.r / 2;
+            this.ctx.strokeStyle = p.color;
+            this.ctx.globalAlpha = Math.max(0, p.opacity);
+            this.ctx.moveTo(p.x + Math.sin(p.tilt) * 6, p.y);
+            this.ctx.lineTo(p.x, p.y + Math.cos(p.tilt) * 8);
+            this.ctx.stroke();
+          }
+        }
+        if (activeCount > 0) {
+          requestAnimationFrame(() => this.animate());
+        } else {
+          this.animating = false;
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+      }
+    }
+
+    // --- Main Game State & Logic ---
+    const MAX_MISTAKES = 6;
+    const sound = new SoundFX();
+    const confetti = new Confetti();
+
+    let state = {
+      category: 'all',
+      target: null,
+      guessedLetters: new Set(),
+      mistakes: 0,
+      streak: 0,
+      score: 0,
+      hintUsed: false,
+      isOver: false,
+      history: JSON.parse(localStorage.getItem('hangman_cui_stats') || '{"games":0,"wins":0,"maxStreak":0,"score":0}')
+    };
+
+    // Body parts in SVG
+    const STICKMAN_PARTS = [
+      'part-head',
+      'part-body',
+      'part-arm-l',
+      'part-arm-r',
+      'part-leg-l',
+      'part-leg-r'
+    ];
+
+    // DOM Elements
+    const wordDisplayEl = document.getElementById('word-display');
+    const kbContainerEl = document.getElementById('virtual-keyboard');
+    const mistakesLeftEl = document.getElementById('mistakes-left');
+    const streakValEl = document.getElementById('streak-val');
+    const scoreValEl = document.getElementById('score-val');
+    const clueCatNameEl = document.getElementById('clue-cat-name');
+    const clueCatIconEl = document.getElementById('clue-cat-icon');
+    const clueLenEl = document.getElementById('clue-len');
+    const hintWrapperEl = document.getElementById('hint-wrapper');
+    const resultModalEl = document.getElementById('result-modal');
+    const statsModalEl = document.getElementById('stats-modal');
+
+    // Setup QWERTY Keyboard
+    const KB_ROWS = [
+      ['Q','W','E','R','T','Y','U','I','O','P'],
+      ['A','S','D','F','G','H','J','K','L'],
+      ['Z','X','C','V','B','N','M']
+    ];
+
+    function buildKeyboard() {
+      kbContainerEl.innerHTML = '';
+      KB_ROWS.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'kb-row';
+        row.forEach(char => {
+          const btn = document.createElement('button');
+          btn.className = 'kb-key';
+          btn.textContent = char;
+          btn.dataset.letter = char;
+          btn.addEventListener('click', () => handleGuess(char));
+          rowEl.appendChild(btn);
+        });
+        kbContainerEl.appendChild(rowEl);
+      });
+    }
+
+    function initGame() {
+      state.guessedLetters.clear();
+      state.mistakes = 0;
+      state.hintUsed = false;
+      state.isOver = false;
+
+      // Filter words by category
+      let pool = VOCABULARY;
+      if (state.category !== 'all') {
+        pool = VOCABULARY.filter(item => item.category === state.category);
+      }
+      state.target = pool[Math.floor(Math.random() * pool.length)];
+
+      // Reset Stickman Visual
+      STICKMAN_PARTS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.remove('visible', 'dead');
+        }
+      });
+
+      // Update Metas
+      clueCatIconEl.textContent = state.target.icon;
+      clueCatNameEl.textContent = `主題：${state.target.catName}`;
+      clueLenEl.textContent = `字數：${state.target.word.length}`;
+      streakValEl.textContent = state.streak;
+      scoreValEl.textContent = state.score;
+      updateMistakesUI();
+
+      // Reset Hint Button
+      hintWrapperEl.innerHTML = `<button class="hint-trigger-btn" id="btn-show-hint">💡 提示 (-20分)</button>`;
+      document.getElementById('btn-show-hint').addEventListener('click', revealHint);
+
+      // Render Word Slots & Keyboard
+      renderWordSlots();
+      resetKeyboardButtons();
+      closeModal();
+    }
+
+    function renderWordSlots(revealAll = false) {
+      wordDisplayEl.innerHTML = '';
+      const letters = state.target.word.split('');
+      letters.forEach(char => {
+        const slot = document.createElement('div');
+        slot.className = 'letter-slot';
+        if (state.guessedLetters.has(char)) {
+          slot.textContent = char;
+          slot.classList.add('revealed');
+        } else if (revealAll) {
+          slot.textContent = char;
+          slot.classList.add('missed');
+        } else {
+          slot.textContent = '';
+        }
+        wordDisplayEl.appendChild(slot);
+      });
+    }
+
+    function updateMistakesUI() {
+      const remaining = MAX_MISTAKES - state.mistakes;
+      mistakesLeftEl.textContent = `${remaining} / ${MAX_MISTAKES}`;
+      if (remaining <= 2) {
+        mistakesLeftEl.classList.add('danger');
+      } else {
+        mistakesLeftEl.classList.remove('danger');
+      }
+    }
+
+    function resetKeyboardButtons() {
+      const keys = kbContainerEl.querySelectorAll('.kb-key');
+      keys.forEach(k => {
+        k.className = 'kb-key';
+        k.disabled = false;
+      });
+    }
+
+    function handleGuess(letter) {
+      if (state.isOver || state.guessedLetters.has(letter)) return;
+      state.guessedLetters.add(letter);
+
+      const keyBtn = kbContainerEl.querySelector(`[data-letter="${letter}"]`);
+      const targetWord = state.target.word;
+
+      if (targetWord.includes(letter)) {
+        // Correct
+        if (keyBtn) keyBtn.classList.add('correct');
+        sound.correct();
+        renderWordSlots();
+        checkGameStatus();
+      } else {
+        // Wrong
+        if (keyBtn) keyBtn.classList.add('wrong');
+        sound.wrong();
+        state.mistakes++;
+        updateStickman();
+        updateMistakesUI();
+        checkGameStatus();
+      }
+    }
+
+    function updateStickman() {
+      const partIdx = state.mistakes - 1;
+      if (partIdx >= 0 && partIdx < STICKMAN_PARTS.length) {
+        const partEl = document.getElementById(STICKMAN_PARTS[partIdx]);
+        if (partEl) partEl.classList.add('visible');
+      }
+    }
+
+    function revealHint() {
+      if (state.hintUsed || state.isOver) return;
+      state.hintUsed = true;
+      state.score = Math.max(0, state.score - 20);
+      scoreValEl.textContent = state.score;
+      hintWrapperEl.innerHTML = `<span class="hint-revealed-text">💡 ${state.target.hint}</span>`;
+    }
+
+    function checkGameStatus() {
+      const targetLetters = state.target.word.split('');
+      const allGuessed = targetLetters.every(char => state.guessedLetters.has(char));
+
+      if (allGuessed) {
+        // Victory!
+        state.isOver = true;
+        state.streak++;
+        const gain = 100 + (MAX_MISTAKES - state.mistakes) * 20;
+        state.score += gain;
+        streakValEl.textContent = state.streak;
+        scoreValEl.textContent = state.score;
+
+        // Save Stats
+        state.history.games++;
+        state.history.wins++;
+        state.history.score = state.score;
+        if (state.streak > state.history.maxStreak) {
+          state.history.maxStreak = state.streak;
+        }
+        saveStats();
+
+        sound.win();
+        confetti.burst();
+        showResultModal(true);
+      } else if (state.mistakes >= MAX_MISTAKES) {
+        // Game Over!
+        state.isOver = true;
+        state.streak = 0;
+        streakValEl.textContent = 0;
+
+        // Turn stickman red
+        STICKMAN_PARTS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('dead');
+        });
+
+        // Reveal remaining letters
+        renderWordSlots(true);
+
+        state.history.games++;
+        state.history.score = state.score;
+        saveStats();
+
+        sound.lose();
+        showResultModal(false);
+      }
+    }
+
+    function showResultModal(won) {
+      setTimeout(() => {
+        const iconEl = document.getElementById('modal-icon');
+        const titleEl = document.getElementById('modal-title');
+        const wordEl = document.getElementById('modal-word');
+        const meaningEl = document.getElementById('modal-meaning');
+        const nextBtn = document.getElementById('modal-next-btn');
+
+        if (won) {
+          iconEl.textContent = '🏆';
+          titleEl.textContent = '神準命中！挑戰成功';
+          titleEl.style.color = '#38bdf8';
+          nextBtn.textContent = '下一題單字 ➔';
+        } else {
+          iconEl.textContent = '💀';
+          titleEl.textContent = '挑戰失敗，再接再厲！';
+          titleEl.style.color = '#ef4444';
+          nextBtn.textContent = '重新挑戰 ➔';
+        }
+
+        wordEl.textContent = state.target.word;
+        meaningEl.textContent = `【${state.target.catName}】${state.target.hint}`;
+        resultModalEl.classList.add('active');
+      }, 550);
+    }
+
+    function closeModal() {
+      resultModalEl.classList.remove('active');
+      statsModalEl.classList.remove('active');
+    }
+
+    function saveStats() {
+      localStorage.setItem('hangman_cui_stats', JSON.stringify(state.history));
+    }
+
+    function openStatsModal() {
+      const h = state.history;
+      document.getElementById('stat-total-games').textContent = h.games;
+      const rate = h.games > 0 ? Math.round((h.wins / h.games) * 100) : 0;
+      document.getElementById('stat-win-rate').textContent = `${rate}%`;
+      document.getElementById('stat-max-streak').textContent = h.maxStreak;
+      document.getElementById('stat-total-score').textContent = state.score;
+      statsModalEl.classList.add('active');
+    }
+
+    // --- Event Listeners ---
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        state.category = e.target.dataset.cat;
+        initGame();
+      });
+    });
+
+    document.getElementById('modal-next-btn').addEventListener('click', () => {
+      closeModal();
+      initGame();
+    });
+
+    document.getElementById('new-game-btn').addEventListener('click', initGame);
+
+    document.getElementById('sound-btn').addEventListener('click', (e) => {
+      sound.enabled = !sound.enabled;
+      e.target.textContent = sound.enabled ? '🔊' : '🔇';
+    });
+
+    document.getElementById('stats-btn').addEventListener('click', openStatsModal);
+    document.getElementById('modal-stats-close-btn').addEventListener('click', closeModal);
+
+    // Keyboard support for Physical Keyboards (Laptop/Desktop)
+    window.addEventListener('keydown', (e) => {
+      if (resultModalEl.classList.contains('active')) {
+        if (e.key === 'Enter') {
+          closeModal();
+          initGame();
+        }
+        return;
+      }
+      if (statsModalEl.classList.contains('active')) {
+        if (e.key === 'Escape') closeModal();
+        return;
+      }
+      const key = e.key.toUpperCase();
+      if (/^[A-Z]$/.test(key)) {
+        handleGuess(key);
+      } else if (e.key === ' ' || e.key === 'Spacebar') {
+        revealHint();
+      }
+    });
+
+    // Initialize
+    buildKeyboard();
+    initGame();
+  </script>
+</body>
+</html>
